@@ -1,0 +1,9 @@
+{
+    "id": "bsskin-sync",
+    "name": "BSSkinSync",
+    "version": "1.0.0",
+    "description": "Fix skin display for Mojang-bound players via Mineskin API",
+    "url": "https://github.com/chancelethay/bsskin-sync",
+    "authors": ["chancelethay"],
+    "main": "top.chancelethay.bsskinsync.BSSkinSync"
+}

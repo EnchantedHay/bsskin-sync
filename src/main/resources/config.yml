@@ -1,0 +1,31 @@
+# ===========================================
+# BSSkinSync — MUA Skin Sync Plugin
+# ===========================================
+
+# Your own skin station's Yggdrasil API root URL (optional).
+# Queried first. If the player's skin is not found here, BSSkinSync falls back to the MUA
+# union endpoint below. Leave blank to always go straight to MUA.
+# Example: "https://skin.example.com/api/yggdrasil"
+own-station:
+  yggdrasil-url: ""
+
+# MUA unified Yggdrasil API root URL.
+# Used as a fallback when the player has no skin on your own station.
+# Covers all MUA member skin stations.
+mua:
+  yggdrasil-url: "https://skin.mualliance.ltd/api/union/yggdrasil"
+
+# Mineskin API configuration
+# Converts skin station textures into Mojang-signed textures accepted by online-mode backends.
+mineskin:
+  # API key (optional — increases rate limits, get one at https://mineskin.org)
+  api-key: ""
+  # Request timeout in seconds
+  timeout-sec: 30
+  # Maximum requests per minute (free tier: ~2/min, with API key: higher)
+  rate-limit: 2
+
+# Local SQLite cache for Mineskin responses
+# Skin hashes are stable — once cached, the same skin never needs to be re-fetched.
+cache:
+  db-path: "cache.db"

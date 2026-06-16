@@ -1,0 +1,77 @@
+plugins {
+    id 'java'
+}
+
+group = 'top.chancelethay'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+}
+
+dependencies {
+    compileOnly 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+    annotationProcessor 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+
+    // SQLite for local Mineskin response cache
+    implementation 'org.xerial:sqlite-jdbc:3.45.1.0'
+
+    // Gson for JSON parsing (Blessing Skin + Mineskin API responses)
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // SnakeYAML for config.yml parsing
+    implementation 'org.yaml:snakeyaml:2.0'
+}
+
+// Merge META-INF/services/* from all bundled JARs so JDBC drivers auto-register
+task mergeServiceFiles {
+    ext.outputDir = file("${buildDir}/merged-services")
+    inputs.files(configurations.runtimeClasspath)
+    outputs.dir(outputDir)
+
+    doLast {
+        def merged = [:] as Map<String, LinkedHashSet<String>>
+        configurations.runtimeClasspath.each { dep ->
+            if (!dep.name.endsWith('.jar')) return
+            def zf = new java.util.zip.ZipFile(dep)
+            try {
+                zf.entries().each { entry ->
+                    if (!entry.directory && entry.name.startsWith('META-INF/services/')) {
+                        merged.computeIfAbsent(entry.name, { new LinkedHashSet<>() })
+                                .addAll(zf.getInputStream(entry).readLines()
+                                        .findAll { !it.isBlank() && !it.startsWith('#') })
+                    }
+                }
+            } finally {
+                zf.close()
+            }
+        }
+        merged.each { path, lines ->
+            def f = new File(outputDir, path)
+            f.parentFile.mkdirs()
+            f.text = lines.join('\n') + '\n'
+        }
+    }
+}
+
+jar {
+    dependsOn mergeServiceFiles
+    archiveClassifier.set('')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(mergeServiceFiles.outputDir)
+    from {
+        configurations.runtimeClasspath.collect { dep ->
+            dep.isDirectory() ? dep : zipTree(dep).matching { exclude 'META-INF/services/**' }
+        }
+    }
+    manifest {
+        attributes 'Implementation-Title': 'BSSkinSync'
+        attributes 'Implementation-Version': version
+    }
+}
